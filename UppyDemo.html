@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp-like Image Upload with Uppy</title>
+  <link href="https://releases.transloadit.com/uppy/v2.0.2/uppy.min.css" rel="stylesheet">
+</head>
+<body>
+  <div id="drag-drop-area"></div>
+  <div id="editor-area"></div>
+
+  <script src="https://releases.transloadit.com/uppy/v2.0.2/uppy.min.js"></script>
+  <script>
+    // Import Uppy plugins from the Uppy global object
+    const { Core, Dashboard, ImageEditor, XHRUpload } = Uppy;
+
+    // Initialize Uppy
+    const uppy = new Core({
+      debug: true,
+      autoProceed: false,
+    });
+
+    uppy.use(Dashboard, {
+      inline: true,
+      target: '#drag-drop-area',
+      showProgressDetails: true,
+      note: 'Images only, up to 1 MB',
+      maxHeight: 350,
+    });
+
+    uppy.use(ImageEditor, {
+      target: Dashboard,
+      quality: 0.8,
+    });
+
+    uppy.use(XHRUpload, {
+      endpoint: 'https://your-server.com/upload',
+      fieldName: 'file',
+    });
+
+    uppy.on('complete', (result) => {
+      console.log('Upload complete! We’ve uploaded these files:', result.successful);
+    });
+
+    // Enable Paste from Clipboard
+    document.addEventListener('paste', (event) => {
+      const items = event.clipboardData.items;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          uppy.addFile({
+            source: 'Clipboard',
+            name: file.name,
+            type: file.type,
+            data: file,
+          });
+        }
+      }
+    });
+
+    // Edit Image
+    uppy.on('file-added', (file) => {
+      uppy.getPlugin('ImageEditor').openEditor(file);
+    });
+  </script>
+</body>
+</html>
